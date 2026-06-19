@@ -338,11 +338,13 @@
    ========================================================= */
 const API_URL = "https://script.google.com/macros/s/AKfycbw5yU44GFviDAFAB_gSuf3a1PnbBOf65EeGNhgDyjhKrTWTOpcNY1u_xgVD-SJFGvoM/exec";
 const ACCESS_CODE = "Hegazy97";
+const APP_PIN = "0221813205";
 
 /* =========================================================
    STATE
    ========================================================= */
 const state = {
+  pinUnlocked: localStorage.getItem("mm_pin_ok") === "1",
   currentUser: localStorage.getItem("mm_user") || null,
   tab: "diary",
   diaryDate: todayStr(),
@@ -444,6 +446,10 @@ async function loadBodyMetrics() {
    ========================================================= */
 function render() {
   const app = document.getElementById("app");
+  if (!state.pinUnlocked) {
+    app.innerHTML = renderPinLock();
+    return;
+  }
   if (!state.currentUser) {
     app.innerHTML = renderNamePicker();
     return;
@@ -493,6 +499,35 @@ function setTab(tab) {
   if (tab === "diary" && !state.diary) loadDiary().then(render);
   if (tab === "plan" && state.weekPlan.length === 0) { loadWeekPlan().then(render); loadGroceryList().then(render); }
   if (tab === "progress") loadBodyMetrics().then(render);
+}
+
+/* =========================================================
+   PIN LOCK SCREEN
+   ========================================================= */
+function renderPinLock() {
+  return `
+    <main style="padding-top:90px; max-width:340px;">
+      <div style="text-align:center; font-size:38px; margin-bottom:6px;">🔒</div>
+      <h1 style="text-align:center; font-size:19px; margin-bottom:18px;">Enter PIN</h1>
+      <input class="text-input" id="pinInput" type="password" inputmode="numeric" placeholder="PIN" autofocus
+        style="text-align:center; font-size:20px; letter-spacing:0.1em;"
+        onkeydown="if(event.key==='Enter') submitPin()" />
+      <div id="pinError" style="color:var(--clay); font-size:13px; text-align:center; min-height:18px; margin-bottom:6px;"></div>
+      <button class="btn-primary" onclick="submitPin()">Unlock</button>
+    </main>
+  `;
+}
+function submitPin() {
+  const entered = document.getElementById("pinInput").value;
+  if (entered === APP_PIN) {
+    state.pinUnlocked = true;
+    localStorage.setItem("mm_pin_ok", "1");
+    render();
+    init();
+  } else {
+    document.getElementById("pinError").textContent = "Incorrect PIN";
+    document.getElementById("pinInput").value = "";
+  }
 }
 
 /* =========================================================
@@ -1107,6 +1142,7 @@ async function submitAddMetric() {
    ========================================================= */
 async function init() {
   render();
+  if (!state.pinUnlocked) return;
   await loadInitialData();
   render();
   if (state.currentUser) await loadDiary();
