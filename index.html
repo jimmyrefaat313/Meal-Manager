@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Meal Manager</title>
+<style>
+  :root {
+    --bg: #FAF6F0;
+    --bg-card: #FFFFFF;
+    --ink: #2B2724;
+    --ink-soft: #6B6259;
+    --line: #E8E0D6;
+    --clay: #C1623D;
+    --clay-soft: #F1DCD2;
+    --sage: #7A8B6F;
+    --sage-soft: #E4EADF;
+    --amber: #D4A24C;
+    --amber-soft: #F6E8CE;
+    --shadow: 0 1px 2px rgba(43,39,36,0.06), 0 4px 12px rgba(43,39,36,0.04);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding-bottom: 84px;
+  }
+
+  .num {
+    font-family: "Avenir Next", "Helvetica Neue", -apple-system, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  header.topbar {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    padding: 18px 20px 12px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header.topbar h1 {
+    font-size: 19px;
+    margin: 0;
+    font-weight: 700;
+  }
+  .user-pill {
+    background: var(--clay-soft);
+    color: var(--clay);
+    border: none;
+    padding: 7px 14px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  main { padding: 0 16px 24px; max-width: 600px; margin: 0 auto; }
+
+  .card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  .ring-row {
+    display: flex;
+    gap: 10px;
+    margin: 4px 0 2px;
+  }
+  .ring-stat { flex: 1; text-align: center; }
+  .ring-stat .bar-track {
+    height: 6px;
+    background: var(--line);
+    border-radius: 100px;
+    overflow: hidden;
+    margin: 6px 0;
+  }
+  .ring-stat .bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 0.4s ease;
+  }
+  .ring-stat .val { font-size: 15px; }
+  .ring-stat .lbl { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .fill-cal { background: var(--clay); }
+  .fill-protein { background: var(--sage); }
+  .fill-carbs { background: var(--amber); }
+  .fill-fat { background: #A8907A; }
+
+  h2.section-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    margin: 18px 4px 8px;
+    font-weight: 700;
+  }
+
+  .meal-slot { margin-bottom: 14px; }
+  .meal-slot-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .meal-slot-head .name { font-weight: 700; font-size: 14px; }
+  .add-btn {
+    background: var(--clay);
+    color: white;
+    border: none;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .entry-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+  .entry-row:last-child { border-bottom: none; }
+  .entry-row .name { flex: 1; }
+  .entry-row .macro { color: var(--ink-soft); font-size: 12.5px; }
+  .entry-row .del { color: var(--ink-soft); border: none; background: none; font-size: 18px; padding: 0 4px; cursor: pointer; }
+  .empty-hint { color: var(--ink-soft); font-size: 13px; padding: 6px 0; }
+
+  nav.tabbar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--bg-card);
+    border-top: 1px solid var(--line);
+    display: flex;
+    padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+    z-index: 20;
+  }
+  nav.tabbar button {
+    flex: 1;
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 0;
+    color: var(--ink-soft);
+    font-size: 11px;
+    cursor: pointer;
+  }
+  nav.tabbar button .icon { font-size: 19px; }
+  nav.tabbar button.active { color: var(--clay); }
+
+  .search-input, .text-input, select.text-input {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    font-size: 15px;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+  .text-input:focus, .search-input:focus { outline: 2px solid var(--clay); outline-offset: 1px; }
+
+  .food-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+  }
+  .food-row .fname { font-weight: 600; font-size: 14.5px; }
+  .food-row .fmeta { font-size: 12px; color: var(--ink-soft); }
+  .food-row .fmacro { font-size: 13px; color: var(--ink-soft); text-align: right; }
+
+  .quickadd-row {
+    display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 8px;
+  }
+  .quickadd-chip {
+    flex-shrink: 0;
+    background: var(--sage-soft);
+    color: var(--sage);
+    border: none;
+    padding: 8px 14px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: var(--clay);
+    color: white;
+    border: none;
+    padding: 13px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    width: 100%;
+    cursor: pointer;
+  }
+  .btn-secondary {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 11px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    width: 100%;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(43,39,36,0.45);
+    z-index: 50;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-sheet {
+    background: var(--bg);
+    width: 100%;
+    max-width: 600px;
+    border-radius: 20px 20px 0 0;
+    padding: 20px;
+    max-height: 86vh;
+    overflow-y: auto;
+  }
+  .modal-sheet h3 { margin: 0 0 14px; font-size: 17px; }
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 20px;
+    background: none; border: none;
+    font-size: 20px; color: var(--ink-soft);
+    cursor: pointer;
+  }
+
+  .day-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .day-nav button {
+    background: var(--bg-card); border: 1px solid var(--line);
+    width: 34px; height: 34px; border-radius: 50%;
+    font-size: 16px; cursor: pointer;
+  }
+  .day-nav .day-label { font-weight: 700; font-size: 15px; }
+
+  .week-grid { display: flex; flex-direction: column; gap: 10px; }
+  .day-col { background: var(--bg-card); border-radius: 14px; padding: 12px; box-shadow: var(--shadow); }
+  .day-col .day-name { font-weight: 700; font-size: 13px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); }
+  .plan-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13.5px; border-bottom: 1px solid var(--line); }
+  .plan-item:last-child { border-bottom: none; }
+  .plan-item .slot { color: var(--ink-soft); width: 64px; flex-shrink: 0; font-size: 11.5px; text-transform: uppercase; }
+
+  .grocery-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--line);
+    font-size: 14.5px;
+  }
+  .grocery-row input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--clay); }
+  .grocery-row.checked .gname { text-decoration: line-through; color: var(--ink-soft); }
+  .grocery-row .gname { flex: 1; }
+  .grocery-row .gqty { color: var(--ink-soft); font-size: 13px; }
+
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: white; padding: 10px 18px;
+    border-radius: 100px; font-size: 13.5px; z-index: 60;
+    opacity: 0; transition: opacity 0.25s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  .loading { text-align: center; padding: 40px 0; color: var(--ink-soft); font-size: 14px; }
+  .empty-state { text-align: center; padding: 30px 14px; color: var(--ink-soft); font-size: 14px; }
+
+  .row-2col { display: flex; gap: 8px; }
+  .row-2col > * { flex: 1; }
+
+  .name-picker {
+    display: flex; flex-direction: column; gap: 10px; margin-top: 10px;
+  }
+  .name-picker button {
+    background: var(--bg-card); border: 1px solid var(--line);
+    padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 600;
+    cursor: pointer; text-align: left;
+  }
+
+  .progress-stat-card { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .progress-stat-card:last-child { border-bottom: none; }
+  .progress-stat-card .plabel { font-size: 13.5px; color: var(--ink-soft); }
+  .progress-stat-card .pvalue { font-size: 16px; font-weight: 700; }
+  .trend-up { color: var(--sage); }
+  .trend-down { color: var(--clay); }
+
+  .insight-card {
+    background: var(--sage-soft);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .insight-card.warn { background: var(--amber-soft); }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   CONFIG
+   ========================================================= */
+const API_URL = "https://script.google.com/macros/s/AKfycbw5yU44GFviDAFAB_gSuf3a1PnbBOf65EeGNhgDyjhKrTWTOpcNY1u_xgVD-SJFGvoM/exec";
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const state = {
+  currentUser: localStorage.getItem("mm_user") || null,
+  tab: "diary",
+  diaryDate: todayStr(),
+  foods: [],
+  recipes: [],
+  users: [],
+  diary: null,
+  weekStart: getMonday(todayStr()),
+  weekPlan: [],
+  groceryList: [],
+  bodyMetrics: [],
+  loading: false,
+};
+
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().split("T")[0];
+}
+function getMonday(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().split("T")[0];
+}
+function addDays(dateStr, n) {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + n);
+  return d.toISOString().split("T")[0];
+}
+function fmtDateLabel(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  const today = todayStr();
+  if (dateStr === today) return "Today";
+  if (dateStr === addDays(today, -1)) return "Yesterday";
+  if (dateStr === addDays(today, 1)) return "Tomorrow";
+  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+}
+
+/* =========================================================
+   API LAYER
+   ========================================================= */
+async function apiGet(action, params) {
+  const url = new URL(API_URL);
+  url.searchParams.set("action", action);
+  for (const k in (params || {})) url.searchParams.set(k, params[k]);
+  const res = await fetch(url.toString());
+  return res.json();
+}
+async function apiPost(action, data) {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action, data }),
+  });
+  return res.json();
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+/* =========================================================
+   DATA LOADING
+   ========================================================= */
+async function loadInitialData() {
+  const [users, foods, recipes] = await Promise.all([
+    apiGet("getUsers"),
+    apiGet("getFoods"),
+    apiGet("getRecipes"),
+  ]);
+  state.users = users;
+  state.foods = foods;
+  state.recipes = recipes;
+}
+
+async function loadDiary() {
+  state.diary = await apiGet("getDiary", { date: state.diaryDate, user: state.currentUser });
+}
+
+async function loadWeekPlan() {
+  state.weekPlan = await apiGet("getWeekPlan", { weekStart: state.weekStart });
+}
+
+async function loadGroceryList() {
+  state.groceryList = await apiGet("getGroceryList", { weekStart: state.weekStart });
+}
+
+async function loadBodyMetrics() {
+  state.bodyMetrics = await apiGet("getBodyMetrics", { user: state.currentUser });
+}
+
+/* =========================================================
+   RENDER ROOT
+   ========================================================= */
+function render() {
+  const app = document.getElementById("app");
+  if (!state.currentUser) {
+    app.innerHTML = renderNamePicker();
+    return;
+  }
+
+  let body = "";
+  if (state.tab === "diary") body = renderDiary();
+  else if (state.tab === "plan") body = renderPlan();
+  else if (state.tab === "recipes") body = renderRecipes();
+  else if (state.tab === "foods") body = renderFoods();
+  else if (state.tab === "progress") body = renderProgress();
+
+  app.innerHTML = `
+    <header class="topbar">
+      <h1>${tabTitle()}</h1>
+      <button class="user-pill" onclick="switchUser()">${state.currentUser} ⌄</button>
+    </header>
+    <main>${body}</main>
+    ${renderTabbar()}
+  `;
+}
+
+function tabTitle() {
+  return { diary: "Today", plan: "Weekly Plan", recipes: "Recipes", foods: "Foods", progress: "Progress" }[state.tab];
+}
+
+function renderTabbar() {
+  const tabs = [
+    ["diary", "📔", "Diary"],
+    ["plan", "🗓️", "Plan"],
+    ["recipes", "🍲", "Recipes"],
+    ["foods", "🥑", "Foods"],
+    ["progress", "📈", "Progress"],
+  ];
+  return `<nav class="tabbar">
+    ${tabs.map(([id, icon, label]) => `
+      <button class="${state.tab === id ? "active" : ""}" onclick="setTab('${id}')">
+        <span class="icon">${icon}</span><span>${label}</span>
+      </button>
+    `).join("")}
+  </nav>`;
+}
+
+function setTab(tab) {
+  state.tab = tab;
+  render();
+  if (tab === "diary" && !state.diary) loadDiary().then(render);
+  if (tab === "plan" && state.weekPlan.length === 0) { loadWeekPlan().then(render); loadGroceryList().then(render); }
+  if (tab === "progress") loadBodyMetrics().then(render);
+}
+
+/* =========================================================
+   NAME PICKER
+   ========================================================= */
+function renderNamePicker() {
+  if (state.users.length === 0) {
+    return `<main><div class="loading">Loading...</div></main>`;
+  }
+  return `
+    <main style="padding-top:60px;">
+      <h1 style="text-align:center;">Who's eating? 🍽️</h1>
+      <div class="name-picker">
+        ${state.users.map(u => `<button onclick="selectUser('${u.name}')">${u.name}</button>`).join("")}
+      </div>
+    </main>
+  `;
+}
+
+function selectUser(name) {
+  state.currentUser = name;
+  localStorage.setItem("mm_user", name);
+  render();
+  loadDiary().then(render);
+}
+
+function switchUser() {
+  state.currentUser = null;
+  localStorage.removeItem("mm_user");
+  render();
+}
+
+/* =========================================================
+   DIARY TAB
+   ========================================================= */
+function renderDiary() {
+  if (!state.diary) return `<div class="loading">Loading your diary…</div>`;
+
+  const t = state.diary.totals;
+  const tgt = state.diary.targets || { calories: 2000, protein_g: 150, carbs_g: 200, fat_g: 65 };
+
+  const slots = ["breakfast", "lunch", "dinner", "snack"];
+  const bySlot = {};
+  slots.forEach(s => bySlot[s] = []);
+  (state.diary.entries || []).forEach(e => {
+    if (!bySlot[e.meal_slot]) bySlot[e.meal_slot] = [];
+    bySlot[e.meal_slot].push(e);
+  });
+
+  return `
+    <div class="day-nav">
+      <button onclick="changeDay(-1)">‹</button>
+      <div class="day-label">${fmtDateLabel(state.diaryDate)}</div>
+      <button onclick="changeDay(1)">›</button>
+    </div>
+
+    <div class="card">
+      ${macroRing("Calories", t.calories, tgt.calories, "fill-cal")}
+      <div class="ring-row">
+        ${macroBar("Protein", t.protein_g, tgt.protein_g, "fill-protein")}
+        ${macroBar("Carbs", t.carbs_g, tgt.carbs_g, "fill-carbs")}
+        ${macroBar("Fat", t.fat_g, tgt.fat_g, "fill-fat")}
+      </div>
+    </div>
+
+    ${slots.map(slot => renderMealSlot(slot, bySlot[slot])).join("")}
+  `;
+}
+
+function macroRing(label, val, target, fillClass) {
+  const pct = Math.min(100, Math.round((val / target) * 100)) || 0;
+  return `
+    <div style="text-align:center; margin-bottom:6px;">
+      <div class="num" style="font-size:32px;">${Math.round(val)}<span style="font-size:15px; color:var(--ink-soft); font-weight:500;"> / ${target} kcal</span></div>
+      <div class="bar-track" style="margin-top:8px;"><div class="bar-fill ${fillClass}" style="width:${pct}%;"></div></div>
+    </div>
+  `;
+}
+function macroBar(label, val, target, fillClass) {
+  const pct = Math.min(100, Math.round((val / target) * 100)) || 0;
+  return `
+    <div class="ring-stat">
+      <div class="val num">${Math.round(val)}g</div>
+      <div class="bar-track"><div class="bar-fill ${fillClass}" style="width:${pct}%;"></div></div>
+      <div class="lbl">${label}</div>
+    </div>
+  `;
+}
+
+function renderMealSlot(slot, entries) {
+  const label = slot.charAt(0).toUpperCase() + slot.slice(1);
+  return `
+    <div class="meal-slot">
+      <div class="meal-slot-head">
+        <span class="name">${label}</span>
+        <button class="add-btn" onclick="openAddMeal('${slot}')">+</button>
+      </div>
+      <div class="card" style="padding:4px 16px;">
+        ${entries.length === 0
+          ? `<div class="empty-hint">Nothing logged yet</div>`
+          : entries.map(e => `
+            <div class="entry-row">
+              <span class="name">${e.item_name} <span style="color:var(--ink-soft); font-size:12.5px;">×${e.quantity}</span></span>
+              <span class="macro">${Math.round(e.macros.calories)} kcal</span>
+              <button class="del" onclick="removeMeal('${e.log_id}')">×</button>
+            </div>
+          `).join("")
+        }
+      </div>
+    </div>
+  `;
+}
+
+function changeDay(delta) {
+  state.diaryDate = addDays(state.diaryDate, delta);
+  state.diary = null;
+  render();
+  loadDiary().then(render);
+}
+
+async function removeMeal(logId) {
+  await apiPost("deleteMealLog", { log_id: logId });
+  showToast("Removed");
+  await loadDiary();
+  render();
+}
+
+/* ---- Add meal modal ---- */
+let addMealSlot = "breakfast";
+function openAddMeal(slot) {
+  addMealSlot = slot;
+  const favs = state.foods.slice(0, 6);
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.innerHTML = `
+    <div class="modal-sheet">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <h3>Add to ${slot.charAt(0).toUpperCase() + slot.slice(1)}</h3>
+      <input class="search-input" id="mealSearchInput" placeholder="Search foods or recipes…" oninput="filterMealSearch(this.value)" />
+      <div class="quickadd-row">
+        ${favs.map(f => `<button class="quickadd-chip" onclick="quickLogFood('${f.food_id}')">${f.name}</button>`).join("")}
+      </div>
+      <div id="mealSearchResults"></div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  filterMealSearch("");
+}
+function closeModal() {
+  document.querySelectorAll(".modal-backdrop").forEach(m => m.remove());
+}
+function filterMealSearch(q) {
+  q = q.toLowerCase();
+  const foodMatches = state.foods.filter(f => f.name.toLowerCase().includes(q)).slice(0, 8);
+  const recipeMatches = state.recipes.filter(r => r.name.toLowerCase().includes(q)).slice(0, 8);
+  const el = document.getElementById("mealSearchResults");
+  el.innerHTML = `
+    ${recipeMatches.map(r => `
+      <div class="food-row" onclick="openLogQty('recipe','${r.recipe_id}','${escapeQ(r.name)}', 1)">
+        <div><div class="fname">${r.name} 🍲</div><div class="fmeta">${r.servings} servings</div></div>
+        <div class="fmacro">${r.calories_per_serving} kcal/serv</div>
+      </div>`).join("")}
+    ${foodMatches.map(f => `
+      <div class="food-row" onclick="openLogQty('food','${f.food_id}','${escapeQ(f.name)}', ${f.serving_size})">
+        <div><div class="fname">${f.name}</div><div class="fmeta">${f.serving_size}${f.serving_unit}</div></div>
+        <div class="fmacro">${f.calories} kcal</div>
+      </div>`).join("")}
+  `;
+}
+function escapeQ(s) { return String(s).replace(/'/g, "\\'"); }
+
+function quickLogFood(foodId) {
+  const f = state.foods.find(x => x.food_id === foodId);
+  openLogQty("food", foodId, f.name, f.serving_size);
+}
+
+function openLogQty(itemType, itemId, name, defaultQty) {
+  closeModal();
+  const unit = itemType === "food" ? (state.foods.find(f => f.food_id === itemId) || {}).serving_unit : "serving(s)";
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.innerHTML = `
+    <div class="modal-sheet">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <h3>${name}</h3>
+      <label style="font-size:13px; color:var(--ink-soft);">Quantity (${unit})</label>
+      <input class="text-input" type="number" id="qtyInput" value="${defaultQty}" />
+      <button class="btn-primary" onclick="confirmLogMeal('${itemType}','${itemId}')">Add to ${addMealSlot}</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function confirmLogMeal(itemType, itemId) {
+  const qty = parseFloat(document.getElementById("qtyInput").value) || 1;
+  closeModal();
+  await apiPost("logMeal", {
+    date: state.diaryDate,
+    user: state.currentUser,
+    meal_slot: addMealSlot,
+    item_type: itemType,
+    item_id: itemId,
+    quantity: qty,
+  });
+  showToast("Added to diary");
+  await loadDiary();
+  render();
+}
+
+/* =========================================================
+   FOODS TAB
+   ========================================================= */
+function renderFoods() {
+  return `
+    <input class="search-input" placeholder="Search your foods…" oninput="filterFoodsList(this.value)" />
+    <div id="foodsListEl">${foodsListHtml(state.foods)}</div>
+    <button class="btn-primary" style="margin-top:10px;" onclick="openAddFood()">+ Add New Food</button>
+  `;
+}
+function foodsListHtml(list) {
+  if (list.length === 0) return `<div class="empty-state">No foods found. Add your first one!</div>`;
+  return list.map(f => `
+    <div class="food-row">
+      <div><div class="fname">${f.name}${f.brand ? ` <span style="color:var(--ink-soft); font-weight:400;">(${f.brand})</span>` : ""}</div>
+      <div class="fmeta">per ${f.serving_size}${f.serving_unit} · P${f.protein_g} C${f.carbs_g} F${f.fat_g}</div></div>
+      <div class="fmacro">${f.calories} kcal</div>
+    </div>
+  `).join("");
+}
+function filterFoodsList(q) {
+  q = q.toLowerCase();
+  const filtered = state.foods.filter(f => f.name.toLowerCase().includes(q) || (f.tags || "").toLowerCase().includes(q));
+  document.getElementById("foodsListEl").innerHTML = foodsListHtml(filtered);
+}
+
+function openAddFood() {
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.innerHTML = `
+    <div class="modal-sheet">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <h3>Add a Food</h3>
+      <input class="text-input" id="f_name" placeholder="Name (e.g. Greek yogurt)" />
+      <input class="text-input" id="f_brand" placeholder="Brand (optional)" />
+      <div class="row-2col">
+        <input class="text-input" id="f_size" type="number" placeholder="Serving size" />
+        <input class="text-input" id="f_unit" placeholder="Unit (g, ml, piece)" />
+      </div>
+      <div class="row-2col">
+        <input class="text-input" id="f_cal" type="number" placeholder="Calories" />
+        <input class="text-input" id="f_protein" type="number" placeholder="Protein (g)" />
+      </div>
+      <div class="row-2col">
+        <input class="text-input" id="f_carbs" type="number" placeholder="Carbs (g)" />
+        <input class="text-input" id="f_fat" type="number" placeholder="Fat (g)" />
+      </div>
+      <input class="text-input" id="f_tags" placeholder="Tags (comma separated)" />
+      <button class="btn-primary" onclick="submitAddFood()">Save Food</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+async function submitAddFood() {
+  const data = {
+    name: document.getElementById("f_name").value,
+    brand: document.getElementById("f_brand").value,
+    serving_size: parseFloat(document.getElementById("f_size").value) || 100,
+    serving_unit: document.getElementById("f_unit").value || "g",
+    calories: parseFloat(document.getElementById("f_cal").value) || 0,
+    protein_g: parseFloat(document.getElementById("f_protein").value) || 0,
+    carbs_g: parseFloat(document.getElementById("f_carbs").value) || 0,
+    fat_g: parseFloat(document.getElementById("f_fat").value) || 0,
+    tags: document.getElementById("f_tags").value,
+    added_by: state.currentUser,
+  };
+  if (!data.name) { showToast("Name is required"); return; }
+  closeModal();
+  await apiPost("addFood", data);
+  showToast("Food added");
+  state.foods = await apiGet("getFoods");
+  render();
+}
+
+/* =========================================================
+   RECIPES TAB
+   ========================================================= */
+function renderRecipes() {
+  return `
+    <div id="recipesListEl">${recipesListHtml(state.recipes)}</div>
+    <button class="btn-primary" style="margin-top:10px;" onclick="openAddRecipe()">+ Create Recipe</button>
+  `;
+}
+function recipesListHtml(list) {
+  if (list.length === 0) return `<div class="empty-state">No recipes yet. Build your first one!</div>`;
+  return list.map(r => `
+    <div class="card">
+      <div style="display:flex; justify-content:space-between;">
+        <strong>${r.name}</strong>
+        <span style="color:var(--ink-soft); font-size:13px;">${r.servings} servings</span>
+      </div>
+      <div style="margin-top:6px; font-size:13px; color:var(--ink-soft);">
+        ${r.calories_per_serving} kcal · P${r.protein_per_serving} C${r.carbs_per_serving} F${r.fat_per_serving} <span style="opacity:0.7;">per serving</span>
+      </div>
+      ${r.instructions ? `<div style="margin-top:8px; font-size:13.5px;">${r.instructions}</div>` : ""}
+    </div>
+  `).join("");
+}
+
+let recipeIngredients = [];
+function openAddRecipe() {
+  recipeIngredients = [];
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.innerHTML = `
+    <div class="modal-sheet">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <h3>Create Recipe</h3>
+      <input class="text-input" id="r_name" placeholder="Recipe name" />
+      <input class="text-input" id="r_servings" type="number" placeholder="Servings it makes" value="2" />
+      <label style="font-size:13px; color:var(--ink-soft);">Ingredients</label>
+      <div id="ingredientPicker"></div>
+      <div id="ingredientList" style="margin:8px 0;"></div>
+      <textarea class="text-input" id="r_instructions" placeholder="Instructions (optional)" rows="3"></textarea>
+      <input class="text-input" id="r_tags" placeholder="Tags (comma separated)" />
+      <button class="btn-primary" onclick="submitAddRecipe()">Save Recipe</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  renderIngredientPicker();
+}
+function renderIngredientPicker() {
+  document.getElementById("ingredientPicker").innerHTML = `
+    <select class="text-input" id="ing_food_select">
+      ${state.foods.map(f => `<option value="${f.food_id}">${f.name} (${f.serving_size}${f.serving_unit})</option>`).join("")}
+    </select>
+    <div class="row-2col">
+      <input class="text-input" id="ing_qty" type="number" placeholder="Quantity" />
+      <button class="btn-secondary" style="margin-top:0;" onclick="addIngredientToRecipe()">+ Add ingredient</button>
+    </div>
+  `;
+  renderIngredientList();
+}
+function renderIngredientList() {
+  document.getElementById("ingredientList").innerHTML = recipeIngredients.map((ing, i) => {
+    const f = state.foods.find(x => x.food_id === ing.food_id);
+    return `<div class="entry-row"><span class="name">${f.name} — ${ing.qty}${f.serving_unit}</span><button class="del" onclick="removeIngredient(${i})">×</button></div>`;
+  }).join("") || `<div class="empty-hint">No ingredients added yet</div>`;
+}
+function addIngredientToRecipe() {
+  const foodId = document.getElementById("ing_food_select").value;
+  const qty = parseFloat(document.getElementById("ing_qty").value);
+  if (!qty) { showToast("Enter a quantity"); return; }
+  recipeIngredients.push({ food_id: foodId, qty });
+  document.getElementById("ing_qty").value = "";
+  renderIngredientList();
+}
+function removeIngredient(i) {
+  recipeIngredients.splice(i, 1);
+  renderIngredientList();
+}
+async function submitAddRecipe() {
+  const name = document.getElementById("r_name").value;
+  if (!name) { showToast("Name is required"); return; }
+  if (recipeIngredients.length === 0) { showToast("Add at least one ingredient"); return; }
+  const data = {
+    name,
+    servings: parseFloat(document.getElementById("r_servings").value) || 1,
+    ingredients: recipeIngredients,
+    instructions: document.getElementById("r_instructions").value,
+    tags: document.getElementById("r_tags").value,
+    added_by: state.currentUser,
+  };
+  closeModal();
+  await apiPost("addRecipe", data);
+  showToast("Recipe saved");
+  state.recipes = await apiGet("getRecipes");
+  render();
+}
+
+/* =========================================================
+   PLAN TAB (weekly planner + grocery list)
+   ========================================================= */
+function renderPlan() {
+  const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const slots = ["breakfast","lunch","dinner"];
+
+  const planByDay = {};
+  days.forEach(d => planByDay[d] = []);
+  state.weekPlan.forEach(p => { if (planByDay[p.day]) planByDay[p.day].push(p); });
+
+  return `
+    <div class="day-nav">
+      <button onclick="changeWeek(-1)">‹</button>
+      <div class="day-label">Week of ${state.weekStart}</div>
+      <button onclick="changeWeek(1)">›</button>
+    </div>
+
+    <div class="week-grid">
+      ${days.map(day => `
+        <div class="day-col">
+          <div class="day-name">${day}</div>
+          ${slots.map(slot => {
+            const item = planByDay[day].find(p => p.meal_slot === slot);
+            return `<div class="plan-item">
+              <span class="slot">${slot}</span>
+              <span style="flex:1;">${item ? itemLabel(item) : "<span style='color:var(--ink-soft);'>—</span>"}</span>
+              <button class="del" style="font-size:14px;" onclick="openPlanPicker('${day}','${slot}')">${item ? "✎" : "+"}</button>
+            </div>`;
+          }).join("")}
+        </div>
+      `).join("")}
+    </div>
+
+    <h2 class="section-title">Grocery List</h2>
+    <div class="card">
+      <button class="btn-secondary" style="margin:0 0 10px;" onclick="generateGrocery()">↻ Regenerate from this week's plan</button>
+      ${state.groceryList.length === 0
+        ? `<div class="empty-hint">No grocery list yet — plan some meals, then regenerate.</div>`
+        : state.groceryList.map(g => `
+          <div class="grocery-row ${g.checked ? 'checked' : ''}">
+            <input type="checkbox" ${g.checked ? "checked" : ""} onchange="toggleGrocery('${g.list_id}')" />
+            <span class="gname">${g.ingredient_name}</span>
+            <span class="gqty">${g.total_qty}${g.unit}</span>
+          </div>
+        `).join("")
+      }
+    </div>
+  `;
+}
+function itemLabel(p) {
+  if (p.item_type === "recipe") {
+    const r = state.recipes.find(x => x.recipe_id === p.item_id);
+    return r ? r.name : p.item_id;
+  }
+  const f = state.foods.find(x => x.food_id === p.item_id);
+  return f ? f.name : p.item_id;
+}
+
+function changeWeek(delta) {
+  state.weekStart = addDays(state.weekStart, delta * 7);
+  state.weekPlan = [];
+  state.groceryList = [];
+  render();
+  Promise.all([loadWeekPlan(), loadGroceryList()]).then(render);
+}
+
+function openPlanPicker(day, slot) {
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.innerHTML = `
+    <div class="modal-sheet">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <h3>${day} · ${slot}</h3>
+      <input class="search-input" placeholder="Search recipes or foods…" oninput="filterPlanSearch(this.value)" />
+      <div id="planSearchResults"></div>
+      <label style="font-size:13px; color:var(--ink-soft); margin-top:8px; display:block;">Servings</label>
+      <input class="text-input" id="plan_servings" type="number" value="1" />
+      <button class="btn-primary" id="planConfirmBtn" style="display:none;" onclick="confirmPlanItem('${day}','${slot}')">Add to plan</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  filterPlanSearch("");
+}
+let selectedPlanItem = null;
+function filterPlanSearch(q) {
+  q = q.toLowerCase();
+  const recipeMatches = state.recipes.filter(r => r.name.toLowerCase().includes(q)).slice(0, 8);
+  const foodMatches = state.foods.filter(f => f.name.toLowerCase().includes(q)).slice(0, 8);
+  document.getElementById("planSearchResults").innerHTML = `
+    ${recipeMatches.map(r => `<div class="food-row" onclick="selectPlanItem('recipe','${r.recipe_id}','${escapeQ(r.name)}')"><div class="fname">${r.name} 🍲</div></div>`).join("")}
+    ${foodMatches.map(f => `<div class="food-row" onclick="selectPlanItem('food','${f.food_id}','${escapeQ(f.name)}')"><div class="fname">${f.name}</div></div>`).join("")}
+  `;
+}
+function selectPlanItem(type, id, name) {
+  selectedPlanItem = { type, id };
+  showToast(`Selected: ${name}`);
+  document.getElementById("planConfirmBtn").style.display = "block";
+}
+async function confirmPlanItem(day, slot) {
+  if (!selectedPlanItem) { showToast("Pick something first"); return; }
+  const servings = parseFloat(document.getElementById("plan_servings").value) || 1;
+  closeModal();
+
+  const entries = state.weekPlan
+    .filter(p => !(p.day === day && p.meal_slot === slot))
+    .map(p => ({ day: p.day, meal_slot: p.meal_slot, item_type: p.item_type, item_id: p.item_id, servings_planned: p.servings_planned, assigned_user: p.assigned_user }));
+  entries.push({ day, meal_slot: slot, item_type: selectedPlanItem.type, item_id: selectedPlanItem.id, servings_planned: servings, assigned_user: state.currentUser });
+
+  await apiPost("setWeekPlan", { weekStart: state.weekStart, entries });
+  showToast("Plan updated");
+  selectedPlanItem = null;
+  await loadWeekPlan();
+  render();
+}
+
+async function generateGrocery() {
+  await apiPost("generateGroceryList", { weekStart: state.weekStart });
+  showToast("Grocery list updated");
+  await loadGroceryList();
+  render();
+}
+async function toggleGrocery(listId) {
+  await apiPost("toggleGroceryItem", { list_id: listId });
+  await loadGroceryList();
+  render();
+}
+
+/* =========================================================
+   PROGRESS TAB
+   ========================================================= */
+function renderProgress() {
+  const metrics = (state.bodyMetrics || []).slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+  if (metrics.length === 0) {
+    return `
+      <div class="empty-state">No body metrics logged yet.</div>
+      <button class="btn-primary" onclick="openAddMetric()">+ Add Measurement</button>
+    `;
+  }
+  const latest = metrics[metrics.length - 1];
+  const prev = metrics.length > 1 ? metrics[metrics.length - 2] : null;
+
+  function deltaHtml(key, unit) {
+    if (!prev) return "";
+    const d = (latest[key] - prev[key]);
+    if (!d) return "";
+    const cls = d < 0 ? "trend-down" : "trend-up";
+    return `<span class="${cls}" style="font-size:12px;"> ${d > 0 ? "+" : ""}${d.toFixed(1)}${unit}</span>`;
+  }
+
+  return `
+    <div class="card">
+      <div style="font-size:13px; color:var(--ink-soft); margin-bottom:6px;">Latest — ${latest.date}</div>
+      <div class="progress-stat-card"><span class="plabel">Weight</span><span class="pvalue">${latest.weight_kg} kg ${deltaHtml('weight_kg','kg')}</span></div>
+      <div class="progress-stat-card"><span class="plabel">Body Fat</span><span class="pvalue">${latest.body_fat_pct}% ${deltaHtml('body_fat_pct','%')}</span></div>
+      <div class="progress-stat-card"><span class="plabel">Muscle Mass</span><span class="pvalue">${latest.muscle_mass_kg} kg ${deltaHtml('muscle_mass_kg','kg')}</span></div>
+      <div class="progress-stat-card"><span class="plabel">Water %</span><span class="pvalue">${latest.water_pct || "—"}%</span></div>
+    </div>
+    <h2 class="section-title">Insights</h2>
+    ${renderInsights(metrics)}
+    <h2 class="section-title">History</h2>
+    <div class="card">
+      ${metrics.slice().reverse().map(m => `
+        <div class="entry-row"><span class="name">${m.date}</span><span class="macro">${m.weight_kg}kg · ${m.body_fat_pct}% BF</span></div>
+      `).join("")}
+    </div>
+    <button class="btn-primary" style="margin-top:10px;" onclick="openAddMetric()">+ Add Measurement</button>
+  `;
+}
+
+function renderInsights(metrics) {
+  if (metrics.length < 2) return `<div class="insight-card">Log a few more weigh-ins to start seeing trends.</div>`;
+  const first = metrics[0];
+  const last = metrics[metrics.length - 1];
+  const weightChange = last.weight_kg - first.weight_kg;
+  const fatChange = last.body_fat_pct - first.body_fat_pct;
+  const muscleChange = last.muscle_mass_kg - first.muscle_mass_kg;
+
+  let insights = [];
+  if (weightChange < -0.3 && muscleChange >= -0.2) {
+    insights.push(`<div class="insight-card">Nice trend: weight is down ${Math.abs(weightChange).toFixed(1)}kg while muscle mass held steady — looks like fat loss, not muscle loss.</div>`);
+  } else if (weightChange < -0.3 && muscleChange < -0.3) {
+    insights.push(`<div class="insight-card warn">Weight is down ${Math.abs(weightChange).toFixed(1)}kg but muscle mass dropped ${Math.abs(muscleChange).toFixed(1)}kg too — worth checking protein intake is keeping pace.</div>`);
+  } else if (weightChange > 0.3) {
+    insights.push(`<div class="insight-card">Weight is up ${weightChange.toFixed(1)}kg over this period.</div>`);
+  } else {
+    insights.push(`<div class="insight-card">Weight has been stable over this period.</div>`);
+  }
+  return insights.join("");
+}
+
+function openAddMetric() {
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.innerHTML = `
+    <div class="modal-sheet">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <h3>Add Measurement</h3>
+      <input class="text-input" id="m_date" type="date" value="${todayStr()}" />
+      <div class="row-2col">
+        <input class="text-input" id="m_weight" type="number" step="0.1" placeholder="Weight (kg)" />
+        <input class="text-input" id="m_bf" type="number" step="0.1" placeholder="Body fat %" />
+      </div>
+      <div class="row-2col">
+        <input class="text-input" id="m_muscle" type="number" step="0.1" placeholder="Muscle mass (kg)" />
+        <input class="text-input" id="m_water" type="number" step="0.1" placeholder="Water %" />
+      </div>
+      <button class="btn-primary" onclick="submitAddMetric()">Save Measurement</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+async function submitAddMetric() {
+  const data = {
+    date: document.getElementById("m_date").value,
+    user: state.currentUser,
+    weight_kg: parseFloat(document.getElementById("m_weight").value) || "",
+    body_fat_pct: parseFloat(document.getElementById("m_bf").value) || "",
+    muscle_mass_kg: parseFloat(document.getElementById("m_muscle").value) || "",
+    water_pct: parseFloat(document.getElementById("m_water").value) || "",
+    source: "manual",
+  };
+  closeModal();
+  await apiPost("addBodyMetric", data);
+  showToast("Measurement saved");
+  await loadBodyMetrics();
+  render();
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+async function init() {
+  render();
+  await loadInitialData();
+  render();
+  if (state.currentUser) await loadDiary();
+  render();
+}
+init();
+</script>
+</body>
+</html>
