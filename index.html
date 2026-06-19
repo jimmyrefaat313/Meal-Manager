@@ -338,7 +338,6 @@
    ========================================================= */
 const API_URL = "https://script.google.com/macros/s/AKfycbw5yU44GFviDAFAB_gSuf3a1PnbBOf65EeGNhgDyjhKrTWTOpcNY1u_xgVD-SJFGvoM/exec";
 const ACCESS_CODE = "Hegazy97";
-const APP_PIN = "0221813205";
 
 /* =========================================================
    STATE
@@ -517,16 +516,39 @@ function renderPinLock() {
     </main>
   `;
 }
-function submitPin() {
+async function submitPin() {
   const entered = document.getElementById("pinInput").value;
-  if (entered === APP_PIN) {
-    state.pinUnlocked = true;
-    localStorage.setItem("mm_pin_ok", "1");
-    render();
-    init();
-  } else {
-    document.getElementById("pinError").textContent = "Incorrect PIN";
+  const btn = document.querySelector("#app .btn-primary");
+  const errEl = document.getElementById("pinError");
+  errEl.textContent = "";
+  if (btn) { btn.disabled = true; btn.textContent = "Checking…"; }
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "checkPin", data: { pin: entered } }),
+    });
+    const result = await res.json();
+
+    if (result.valid) {
+      state.pinUnlocked = true;
+      localStorage.setItem("mm_pin_ok", "1");
+      render();
+      init();
+      return;
+    }
+
+    if (result.locked) {
+      errEl.textContent = `Too many attempts. Try again in ${result.minutesLeft} min.`;
+    } else {
+      errEl.textContent = `Incorrect PIN${result.attemptsLeft ? ` (${result.attemptsLeft} attempts left)` : ""}`;
+    }
     document.getElementById("pinInput").value = "";
+  } catch (err) {
+    errEl.textContent = "Couldn't reach the server. Check your connection.";
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "Unlock"; }
   }
 }
 
